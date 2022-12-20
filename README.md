@@ -13,6 +13,7 @@ This small project is an academy project. The main goal of this app is to be abl
 This is the final result of the project:<br/><br/>
 ![](./render-1.png)
 ![](./render-2.png)
+![](./render-3.png)
 
 ## Project installation
 
