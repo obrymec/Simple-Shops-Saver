@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+    <!--Structure global de la page-->
+    <html lang = "fr">
+        <!--Contient les données d'entête générales à la page-->
+        <head>
+            <!--Configuration des métas données de la page par rapport à sa sensibilité-->
+            <meta charset = "UTF-8" http-equiv = "X-UA-Compatible" content = "IE=edge"/>
+            <meta name = "viewport" content = "width=device-width, initial-scale=1.0"/>
+            <!--Importation de fichier de style-->
+            <link rel = "stylesheet" href = "./style.css"/>
+            <!--Donnons un titre à notre page-->
+            <title>Effectuer un achat</title>
+        </head>
+        <!--Structuration du contenu-->
+        <body>
+            <!--Conteneur générale-->
+            <div align = "center">
+                <!--Contient les informations nécessaires pour enregistrer un achat donné-->
+                <br/><fieldset>
+                    <!--Contient le titre de notre section-->
+                    <legend><strong>Enregistrer un achat</strong></legend><br/>
+                    <!--Contient le nom de l'auteur de l'achat-->
+                    <div><input type = "text" id = "nom_client" placeholder = "Nom du client"/></div><br/>
+                    <!--Contient la date de l'achat-->
+                    <div><input type = "date" id = "date_achat" placeholder = "Date d'achat"/></div><br/>
+                    <!--Contient la nature de la livraison effectuée-->
+                    <div><input type = "text" id = "livraison" placeholder = "Livraison"/></div><br/>
+                    <!--Contient tous les aticles concernés par l'achat-->
+                    <div class = "articles"></div>
+                    <!--Bouton de validation du formulaire-->
+                    <div><input type = "button" id = "bouton_de_validation" value = "Enregistrer"/></div><br/>
+                    <!--Bouton d'ajout d'un article-->
+                    <div><input type = "button" id = "bouton_achat" value = "Acheter"/></div><br/>
+                </fieldset>
+            </div><br/>
+            <!--Importation de la librairie jquery-->
+            <script src = "./jquery.js" type = "text/javascript"></script>
+            <!--Importation de notre script de gestion des requêtes AJAX-->
+            <script src = "./ajax.js" type = "text/javascript"></script>
+            <!--Le script java ci-dessous est le contrôleur de notre page "enregistrerAchat.html"-->
+            <script type = "text/javascript">
+                // Lorsque la page est entièrement chargée, exécute le code source ci-dessous.
+                window.onload = function () {
+                    // Récupération de la référence du bouton de validation.
+                    let bouton_de_validation = document.getElementById ("bouton_de_validation");
+                    // Récupération de la référence du bouton d'achat.
+                    let bouton_achat = document.getElementById ("bouton_achat");
+                    // Récupération de la référence de la balise contenant la livraison effectuée.
+                    let livraison = document.getElementById ("livraison");
+                    // Récupération de la référence de la balise contenant l'auteur de l'achat.
+                    let client = document.getElementById ("nom_client");
+                    // Récupération de la référence de la balise contenant la date de l'achat.
+                    let date = document.getElementById ("date_achat");
+                    // Contient la position d'un article quelconque sur l'interface graphique.
+                    let position_article = 0;
+                    // Contient l'identifiant de l'achat actuel.
+                    let code_achat = -1;
+
+                    // Cette fonction génère les champs obligatoire propre à un article donné.
+                    function generer_un_article () {
+                        // Génération du code HTML nécessaire à la création d'un article donné.
+                        $ ("div.articles").append (`
+                            <div>
+                                <fieldset>
+                                    <legend>Article ${(position_article + 1)}</legend><br/>
+                                    <div class = "article-${position_article}">
+                                        <div>
+                                            <label>Référence de l'article:</label><br/>
+                                            <select id = "reference-${position_article}"></select>
+                                        </div><br/>
+                                        <div>
+                                            <label>Quantité:</label><br/>
+                                            <input type = "number" min = '0.00' id = "quantite-${position_article}" placeholder = "Quantité"/>
+                                        </div>
+                                    </div><br/>
+                                </fieldset><br/>
+                            </div>
+                        `);
+                        // Appelons la méthode "ajax_avec_XMLHttpRequest ()" déjà définie dans notre script "ajax.js"
+                        // pour récupérer la liste des articles disponibles dans la base de données.
+                        ajax_avec_XMLHttpRequest ("http://localhost:80/simple-shops-saver/enregistrerAchat.php", {
+                            operation: "recuperer_articles"
+                        }, function (donnees) {
+                            // Ajoutons chaque donnée récupérée de la base de données.
+                            for (let article of donnees.articles) {
+                                // Création d'une balise option qui représentera un article donné.
+                                $ (`select#reference-${position_article}`).append (`<option value = "${article.refart}">${article.refart}</option>`);
+                            }
+                            // Passe à la création de l'article suivant.
+                            position_article++;
+                        });
+                    }
+
+                    // Cette fonction sauvegarde toutes les données relatives à un achat donné.
+                    function sauvegarder_achat () {
+                        // Récupération des données éssentielles du formulaire.
+                        const donnees_du_formulaire = new Object ({
+                            "reference_article": $ (`select#reference-${position_article}`).val (),
+                            "quantite": $ (`input#quantite-${position_article}`).val (),
+                            "operation": "ajouter_articles",
+                            "livraison": livraison.value,
+                            "position": position_article,
+                            "code_achat": code_achat,
+                            "client": client.value,
+                            "date": date.value
+                        });
+                        // Appelons la méthode "ajax_avec_XMLHttpRequest ()" déjà définie dans notre script "ajax.js"
+                        // pour sauvegarder les articles achetés par un client quelconque dans la base de données.
+                        ajax_avec_XMLHttpRequest ("http://localhost:80/simple-shops-saver/enregistrerAchat.php", donnees_du_formulaire, function (donnees) {
+                            // Récupération de l'identifiant de l'achat actuellement en cours.
+                            code_achat = donnees.code_achat;
+                            // Tanque tous les articles ne seront pas sauvegardés, on continu les traitements.
+                            if ((position_article + 1) < $ ("div.articles").children ().length) {
+                                // Passe à l'article suivant.
+                                position_article++;
+                                // Recommence le processus encore et encore.
+                                sauvegarder_achat ();
+                            // Dans le cas contraire.
+                            } else {
+                                // Prévenons l'utilisateur de la réussite de l'opération avec la boîte de dialogue du navigateur.
+                                alert ("Enregistrement effectué avec succès !");
+                                // Nétoyage de tous les articles actuellement ajoutés sur l'interface graphique.
+                                $ ("div.articles").html ('');
+                                // Réinitialisation de la position générale des articles à 0.
+                                position_article = 0;
+                                // Réinitialisation du code de l'achat.
+                                code_achat = -1;
+                            }
+                        // En cas d'erreur, affichons le message d'erreur ainsi détecté.
+                        }, function (status) {
+                            // Affiche le message d'erreur dans la console du navigateur.
+                            console.error (status);
+                        });
+                    }
+
+                    // Ecoutons l'événement de "click" du bouton d'achat pour faire nos opérations.
+                    bouton_achat.addEventListener ("click", () => generer_un_article ());
+                    // Ecoutons l'événement de "click" sur le bouton de validation pour faire nos opérations.
+                    bouton_de_validation.addEventListener ("click", function () {
+                        // Réinitialisation de la position générale des articles à 0.
+                        position_article = 0;
+                        // Sauvegarde tous les articles achetés.
+                        sauvegarder_achat ();
+                    });
+                }
+            </script>
+        </body>
+    </html>
