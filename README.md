@@ -48,6 +48,6 @@ To navigate between project views, you can uses the following below links:
 - http://localhost/simple-shops-saver/enregistrerAchat.html
 - http://localhost/simple-shops-saver/rechercher.html
 
-<u><strong>NB</strong></u>: Make sure that the project folder name is: <i><strong>simple-shops-saver</i></strong>
+<u><strong>Pay Attention</strong></u>: Make sure that the project folder name is: <i><strong>simple-shops-saver</i></strong>
 
 Enjoy :)
